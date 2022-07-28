@@ -1,9 +1,3 @@
-/* Необходимо реализовать move-конструктор и оператор присваивания из временного объекта (ArrayPtr<Type>&&)*/
-/* Я реализовал это в simple_vector ниже, или сделал что то не верно и не так надо было? 
-SimpleVector& operator=(SimpleVector&& rvalue)  и SimpleVector(SimpleVector&& other)*/
-
-
-
 #pragma once
 
 #include <cassert>
@@ -78,16 +72,15 @@ public:
         capacity_ = other.GetCapacity();
         ArrayPtr<Type> tmp(size_);
         data.swap(tmp);
-        copy(other.begin(), other.end(), tmp.begin());
+        copy(other.begin(), other.end(), begin());
     }
     
-    SimpleVector(SimpleVector&& other) {
-        Resize(other.GetSize());
+    SimpleVector(SimpleVector&& other) 
+        : data(move(other.data)) {
         size_ = other.GetSize();
         capacity_ = other.GetCapacity();
-        move(other.begin(), other.end(), this->begin());
-        exchange(other.capacity_, 0);
-        exchange(other.size_, 0);
+        other.capacity_ = 0;
+        other.size_ = 0;
     }
 
     size_t GetSize() const noexcept {
@@ -197,20 +190,14 @@ public:
         capacity_ = rhs.GetCapacity();
         ArrayPtr<Type> tmp(size_);
         data.swap(tmp);
-        copy(rhs.begin(), rhs.end(), data.begin());
+        copy(rhs.begin(), rhs.end(), begin());
         return *this;
     }
     
     SimpleVector& operator=(SimpleVector&& rvalue) {
-        size_ = move(rvalue.size_);
-        capacity_ = move(rvalue.capacity_);
-        ArrayPtr<Type> tmp(size_);
-        data.swap(tmp);
-        size_t i = 0;
-        while (i != size_) {
-            *(begin() + i) = move(*(rvalue.begin() + i));
-            ++i;
-        }
+        size_ = rvalue.size_;
+        capacity_ = rvalue.capacity_;
+        data = move(rvalue.data);
         rvalue.capacity_ = 0;
         rvalue.size_ = 0;
         return *this;
