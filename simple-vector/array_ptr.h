@@ -54,9 +54,7 @@ public:
     }
 
     void swap(ArrayPtr& other) noexcept {
-        Type* ptr_copy = raw_ptr_;
-        raw_ptr_ = other.raw_ptr_;
-        other.raw_ptr_ = ptr_copy;
+        std::swap(raw_ptr_, other.raw_ptr_);
     }
 
 private:
