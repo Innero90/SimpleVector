@@ -1,3 +1,9 @@
+/* Необходимо реализовать move-конструктор и оператор присваивания из временного объекта (ArrayPtr<Type>&&)*/
+/* Я реализовал это в simple_vector ниже, или сделал что то не верно и не так надо было? 
+SimpleVector& operator=(SimpleVector&& rvalue)  и SimpleVector(SimpleVector&& other)*/
+
+
+
 #pragma once
 
 #include <cassert>
@@ -72,11 +78,7 @@ public:
         capacity_ = other.GetCapacity();
         ArrayPtr<Type> tmp(size_);
         data.swap(tmp);
-        size_t i = 0;
-        while (i != size_) {
-            *(begin() + i) = *(other.begin() + i);
-            ++i;
-        }
+        copy(other.begin(), other.end(), tmp.begin());
     }
     
     SimpleVector(SimpleVector&& other) {
@@ -115,10 +117,12 @@ public:
     }
 
     Type& operator[](size_t index) noexcept {
+        assert(index < size_);
         return data[index];
     }
 
     const Type& operator[](size_t index) const noexcept {
+        assert(index < size_);
         return data[index];
     }
 
@@ -193,11 +197,7 @@ public:
         capacity_ = rhs.GetCapacity();
         ArrayPtr<Type> tmp(size_);
         data.swap(tmp);
-        size_t i = 0;
-        while (i != size_) {
-            *(begin() + i) = *(rhs.begin() + i);
-            ++i;
-        }
+        copy(rhs.begin(), rhs.end(), data.begin());
         return *this;
     }
     
@@ -241,6 +241,7 @@ public:
     }
     
     Iterator Insert(ConstIterator pos, const Type& value) {
+        assert(pos >= begin() && pos <= end());
         if (capacity_ == 0) {
             capacity_ = 1;
             size_ = 1;
@@ -271,6 +272,7 @@ public:
     }
     
     Iterator Insert(ConstIterator pos, Type&& value) {
+        assert(pos >= begin() && pos <= end());
         if (capacity_ == 0) {
             capacity_ = 1;
             size_ = 1;
@@ -307,6 +309,7 @@ public:
     }
     
     Iterator Erase(ConstIterator pos) {
+        assert(pos >= begin() && pos < end());
         size_t count = pos - begin();
         for (size_t i = count; i < size_; ++i) {
             data[i] = data[i + 1];
@@ -316,6 +319,7 @@ public:
     }
     
     Iterator Erase(Iterator pos) {
+        assert(pos >= begin() && pos < end());
         size_t count = pos - begin();
         for (size_t i = count; i < size_; ++i) {
             data[i] = move(data[i + 1]);
