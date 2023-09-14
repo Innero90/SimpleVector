@@ -1,71 +1,105 @@
 #include <cassert>
 #include <cstdlib>
-#include <algorithm>
-#include <iostream>
+#include <vector>
 
 template <typename Type>
-class ArrayPtr {
+class ArrayPtr
+{
 public:
+    // Инициализирует ArrayPtr нулевым указателем
     ArrayPtr() = default;
 
-    explicit ArrayPtr(size_t size) {
-        if (size == 0) {
-            raw_ptr_ = nullptr;
-        } else {
+    // Создаёт в куче массив из size элементов типа Type.
+    // Если size == 0, поле raw_ptr_ должно быть равно nullptr
+    explicit ArrayPtr(size_t size)
+    {
+        if (size != 0)
+        {
             raw_ptr_ = new Type[size];
+        }
+        else
+        {
+            raw_ptr_ = nullptr;
         }
     }
 
-    explicit ArrayPtr(Type* raw_ptr) noexcept {
-            raw_ptr_ = raw_ptr;
+    // Конструктор из сырого указателя, хранящего адрес массива в куче либо
+    // nullptr
+    explicit ArrayPtr(Type *raw_ptr) noexcept
+    {
+        raw_ptr_ = raw_ptr;
     }
 
-    ArrayPtr(const ArrayPtr&) = delete;
-    
-    ArrayPtr(ArrayPtr<Type>&& rvalue) {
-        std::swap(raw_ptr_, rvalue.raw_ptr_);
+    // Запрещаем копирование
+    ArrayPtr(const ArrayPtr &) = delete;
+
+    ArrayPtr(ArrayPtr &&other)
+    {
+        raw_ptr_ = other.raw_ptr_;
+        other.raw_ptr_ = nullptr;
     }
 
-    ~ArrayPtr() {
+    ~ArrayPtr()
+    {
         delete[] raw_ptr_;
     }
 
-    ArrayPtr& operator=(const ArrayPtr&) = delete;
-    
-    ArrayPtr& operator=(ArrayPtr<Type>&& rvalue) {
-        std::swap(raw_ptr_, rvalue.raw_ptr_);
+    // Запрещаем присваивание
+    ArrayPtr &operator=(const ArrayPtr &) = delete;
+
+    ArrayPtr &operator=(ArrayPtr &&other)
+    {
+        if (this == &other)
+        {
+            return *this;
+        }
+
+        raw_ptr_ = other.raw_ptr_;
+        other.raw_ptr_ = nullptr;
         return *this;
     }
 
-    [[nodiscard]] Type* Release() noexcept {
-        Type* tmp = raw_ptr_;
+    // Прекращает владением массивом в памяти, возвращает значение адреса массива
+    // После вызова метода указатель на массив должен обнулиться
+    [[nodiscard]] Type *Release() noexcept
+    {
+        auto g = raw_ptr_;
         raw_ptr_ = nullptr;
-        return tmp;
+        return g;
     }
 
-    Type& operator[](size_t index) noexcept {
-        return raw_ptr_[index];
+    // Возвращает ссылку на элемент массива с индексом index
+    Type &operator[](size_t index) noexcept
+    {
+        return *(raw_ptr_ + index);
     }
 
-    const Type& operator[](size_t index) const noexcept {
-        return raw_ptr_[index];
+    // Возвращает константную ссылку на элемент массива с индексом index
+    const Type &operator[](size_t index) const noexcept
+    {
+        return *(raw_ptr_ + index);
     }
 
-    explicit operator bool() const {
-        if (raw_ptr_ == nullptr) {
-            return false;
-        }
-        return true;
-    }
-
-    Type* Get() const noexcept {
+    // Возвращает true, если указатель ненулевой, и false в противном случае
+    explicit operator bool() const
+    {
         return raw_ptr_;
     }
 
-    void swap(ArrayPtr& other) noexcept {
-        std::swap(raw_ptr_, other.raw_ptr_);
+    // Возвращает значение сырого указателя, хранящего адрес начала массива
+    Type *Get() const noexcept
+    {
+        return raw_ptr_;
+    }
+
+    // Обменивается значениям указателя на массив с объектом other
+    void swap(ArrayPtr &other) noexcept
+    {
+        auto b = other.raw_ptr_;
+        other.raw_ptr_ = raw_ptr_;
+        raw_ptr_ = b;
     }
 
 private:
-    Type* raw_ptr_ = nullptr;
+    Type *raw_ptr_ = nullptr;
 };
